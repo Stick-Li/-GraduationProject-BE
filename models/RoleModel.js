@@ -8,7 +8,8 @@ const roleSchema = new Schema({
     roleName: String,
     createTime: Number,
     powerTime: Number,
-    powerUser: String
+    powerUser: String,
+    menuPath: Array,
 })
 
 const RoleModel = mongoose.model('roles', roleSchema)
