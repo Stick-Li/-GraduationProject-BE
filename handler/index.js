@@ -181,3 +181,64 @@ exports.getMenu = (req, res) => {
         })
 
 }
+
+// 获取前端传递过来的excel数据
+exports.addUsers = (req, res) => {
+    console.log('后端接口', req.body)
+    const dataArr = req.body
+    const promise = new Promise((resolve, reject) => {
+        dataArr.forEach((value, index, array) => {
+            UserModel.findOne({ userId: value.userId })
+                .then((user) => {
+                    if (user) {
+                        UserModel.updateOne({ userId: value.userId }, { $set: { value } })
+                        // .then(() => {
+                        //     console.log('更新成功')
+                        //     // res.send({
+                        //     //     status: 200,
+                        //     //     msg: `更新成功`
+                        //     // })
+                        // })
+                        // .catch((error) => {
+                        //     console.log('更新失败')
+                        //     // res.send({
+                        //     //     status: 500,
+                        //     //     msg: `更新失败${error}`
+                        //     // })
+                        // })
+                    } else {
+                        UserModel.create(value)
+                        // .then(() => {
+                        //     console.log('添加成功')
+                        // })
+                        // .catch((error) => {
+                        //     console.log('添加失败')
+                        // })
+                    }
+                })
+                .catch((error) => {
+                    reject(error)
+                })
+        })
+        resolve()
+    })
+    promise.then(() => {
+        res.send({
+            status: 200,
+            msg: '数据添加/更新成功！'
+        })
+    }).catch((error) => {
+        res.send({
+            status: 500,
+            msg: `部分数据导入失败：${error.message}`
+        })
+    })
+    // res.send({
+    //     status: 200,
+    //     msg: '数据添加/更新成功！'
+    // })
+    // res.send({
+    //     status: 500,
+    //     msg: `数据导入失败：${error.message}`
+    // })
+}

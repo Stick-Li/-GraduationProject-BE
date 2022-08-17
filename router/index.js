@@ -25,4 +25,7 @@ router.get('/getallusers', handle.getAllUsers)
 // 根据当前登录用户查询Role表的menuPath
 router.get('/getmemu', handle.getMenu)
 
+// 添加多组数据
+router.post('/addusers', handle.addUsers)
+
 module.exports = router
