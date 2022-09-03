@@ -28,4 +28,17 @@ router.get('/getmemu', handle.getMenu)
 // 添加多组数据
 router.post('/addusers', handle.addUsers)
 
+// 修改单人信息
+router.post('/updateoneuser', handle.updateOneUser)
+
+// 删除单人信息
+router.post('/deleteoneuser', handle.deleteOneUser)
+
+// 身份A发送通知
+router.post('/sendMessage', handle.sendMessage)
+
+// 拿到发给当前登录用户的通知
+router.get('/getnoticearr', handle.getNoticeArr)
+
+
 module.exports = router

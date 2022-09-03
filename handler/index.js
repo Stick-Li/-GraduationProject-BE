@@ -2,6 +2,7 @@
 const md5 = require('blueimp-md5')
 const UserModel = require('../models/UserModel')
 const RoleModel = require('../models/RoleModel')
+const NoticeModule = require('../models/NoticeModule')
 
 // 登录
 exports.login = (req, res) => {
@@ -241,4 +242,171 @@ exports.addUsers = (req, res) => {
     //     status: 500,
     //     msg: `数据导入失败：${error.message}`
     // })
+}
+
+// 修改单人信息
+exports.updateOneUser = (req, res) => {
+    // console.log(req.body)
+    const { _id, username, userId, userPhone, userRole, userInstitute, userSubject } = req.body
+    // console.log('_id', _id)
+    UserModel.findOne({ userId })
+        .then((idCannotChange) => {
+            console.log('开始寻找传入的userID')
+            // console.log('_id', _id)
+            // console.log('idCannotChange._id', JSON.stringify(idCannotChange._id).slice(1, -1))
+            if (idCannotChange) {
+                console.log('传入的userID存在')
+                if (idCannotChange._userId !== userId) {
+                    console.log('传入的userID存在-不是自己，返回报错', idCannotChange.userId, userId)
+                    res.send({
+                        status: 400,
+                        msg: `添加异常，修改后学号/工号与他人重复！`
+                    })
+                    return;
+                }
+            }
+            console.log('传入的userID存在-是自己/不存在，更新数据')
+            UserModel.updateOne({ _id }, { $set: { username, userId, userPhone, userRole, userInstitute, userSubject } })
+                .then(() => {
+                    res.send({
+                        status: 200,
+                        msg: `修改成功`
+                    })
+                })
+        }
+        )
+        .catch((error) => {
+            res.send({
+                status: 500,
+                msg: `添加异常，请重新尝试${error}`
+            })
+        })
+
+}
+
+// 删除单人信息
+exports.deleteOneUser = (req, res) => {
+    // const _id = JSON.stringify(req.body)
+    // console.log(_id)
+    // console.log(Object.keys(_id))
+    const { _id } = req.body
+    console.log(_id)
+    UserModel.deleteOne({ _id })
+        .then(() => {
+            res.send({
+                status: 200,
+                msg: `删除成功！`
+            })
+        })
+        .catch((error) => {
+            res.send({
+                status: 500,
+                msg: `删除失败，请重新尝试${error}`
+            })
+        })
+}
+
+// 发送通知
+exports.sendMessage = (req, res) => {
+    console.log('后端获取到的数据', req.body)
+    const { receiverRole, receiverId } = req.body
+    if (receiverRole) {
+        // 根据receiverRole的值查找所有符合的id，然后挨个添加
+        UserModel.find({ userRole: receiverRole })
+            .then((receivers) => {
+                console.log('查找结果：', receivers)
+                receivers.map((value, index, array) => {
+                    NoticeModule.create({ ...req.body, receiverId: value.userId })
+                        .then(() => {
+                            console.log('添加成功')
+                            res.send({
+                                status: 200,
+                                msg: `添加成功`
+                            })
+                        })
+                    // .catch((error) => {
+                    //     console.log('添加失败', error.message)
+                    //     res.send({
+                    //         status: 500,
+                    //         msg: `添加失败，请重新尝试${error}`
+                    //     })
+                    // })
+                })
+
+                // NoticeModule.create(req.body)
+                //     .then(() => {
+                //         console.log('添加成功')
+                //         res.send({
+                //             status: 200,
+                //             msg: `添加成功`
+                //         })
+                //     })
+                //     .catch((error) => {
+                //         console.log('添加失败', error.message)
+                //         res.send({
+                //             status: 500,
+                //             msg: `添加失败，请重新尝试${error}`
+                //         })
+                //     })
+
+
+            })
+            .catch((error) => {
+                res.send({
+                    status: 500,
+                    msg: `操作失败，请重新尝试：${error}`
+                })
+            })
+    } else {
+        console.log(receiverRole)
+        UserModel.findOne({ userId: receiverId })
+            .then((info) => {
+                console.log('找到了吗', info)
+                if (info) {
+                    NoticeModule.create(req.body)
+                        .then(() => {
+                            console.log('添加成功')
+                            res.send({
+                                status: 200,
+                                msg: `添加成功`
+                            })
+                        })
+                } else {
+                    res.send({
+                        status: 501,
+                        msg: `该用户不存在，无法发送消息`
+                    })
+                }
+            })
+            .catch((error) => {
+                res.send({
+                    status: 500,
+                    msg: `操作失败，请重新尝试：${error}`
+                })
+            })
+
+    }
+
+}
+
+// 拿到发给当前登录用户的通知
+exports.getNoticeArr = (req, res) => {
+    const { receiverId } = req.query
+    console.log('****', receiverId)
+    NoticeModule.find({ receiverId })
+        .then((noticeArr) => {
+            // console.log(noticeArr)
+            res.send({
+                status: 200,
+                msg: `查询成功`,
+                data: noticeArr
+            })
+        })
+        .catch((error) => {
+            res.send({
+                status: 500,
+                msg: `操作失败，请重新尝试：${error}`,
+                data: null
+            })
+        })
 }
