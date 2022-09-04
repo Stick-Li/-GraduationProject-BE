@@ -393,7 +393,7 @@ exports.sendMessage = (req, res) => {
 exports.getNoticeArr = (req, res) => {
     const { receiverId } = req.query
     console.log('****', receiverId)
-    NoticeModule.find({ receiverId })
+    NoticeModule.find({ receiverId }).sort({ sendTime: -1 })
         .then((noticeArr) => {
             // console.log(noticeArr)
             res.send({
@@ -408,5 +408,27 @@ exports.getNoticeArr = (req, res) => {
                 msg: `操作失败，请重新尝试：${error}`,
                 data: null
             })
+        })
+}
+
+// 修改isReceiveRead
+exports.changeIsRead = (req, res) => {
+    const { _id } = req.query
+    // console.log(req.query)
+    NoticeModule.updateOne({ _id }, { $set: { isReceiveRead: true } })
+        .then(() => {
+            console.log('修改成功')
+            // res.send({
+            //     status: 200,
+            //     msg: `修改成功`
+            // })
+        })
+        .catch((error) => {
+            console.log('修改失败')
+            // res.send({
+            //     status: 500,
+            //     msg: `服务端错误：${error}`,
+            //     data: null
+            // })
         })
 }

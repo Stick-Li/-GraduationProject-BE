@@ -40,5 +40,8 @@ router.post('/sendMessage', handle.sendMessage)
 // 拿到发给当前登录用户的通知
 router.get('/getnoticearr', handle.getNoticeArr)
 
+// 修改isReceiveRead
+router.get('/changeisread', handle.changeIsRead)
+
 
 module.exports = router
