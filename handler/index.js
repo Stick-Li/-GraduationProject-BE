@@ -254,25 +254,28 @@ exports.updateOneUser = (req, res) => {
             console.log('开始寻找传入的userID')
             // console.log('_id', _id)
             // console.log('idCannotChange._id', JSON.stringify(idCannotChange._id).slice(1, -1))
+            // if (idCannotChange) {
+            //     console.log('传入的userID存在')
+            //     if (idCannotChange._userId !== userId) {
+            //         console.log('传入的userID存在-不是自己，返回报错', idCannotChange.userId, userId)
+            //         res.send({
+            //             status: 400,
+            //             msg: `添加异常，修改后学号/工号与他人重复！`
+            //         })
+            //         return;
+            //     }
+            // }
+            // console.log('传入的userID存在-是自己/不存在，更新数据')
             if (idCannotChange) {
-                console.log('传入的userID存在')
-                if (idCannotChange._userId !== userId) {
-                    console.log('传入的userID存在-不是自己，返回报错', idCannotChange.userId, userId)
-                    res.send({
-                        status: 400,
-                        msg: `添加异常，修改后学号/工号与他人重复！`
+                // 传入的userID存在存在
+                UserModel.updateOne({ _id }, { $set: { username, userId, userPhone, userRole, userInstitute, userSubject } })
+                    .then(() => {
+                        res.send({
+                            status: 200,
+                            msg: `修改成功`
+                        })
                     })
-                    return;
-                }
             }
-            console.log('传入的userID存在-是自己/不存在，更新数据')
-            UserModel.updateOne({ _id }, { $set: { username, userId, userPhone, userRole, userInstitute, userSubject } })
-                .then(() => {
-                    res.send({
-                        status: 200,
-                        msg: `修改成功`
-                    })
-                })
         }
         )
         .catch((error) => {
