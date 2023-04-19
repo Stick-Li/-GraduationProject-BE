@@ -3,6 +3,8 @@ const md5 = require('blueimp-md5')
 const UserModel = require('../models/UserModel')
 const RoleModel = require('../models/RoleModel')
 const NoticeModule = require('../models/NoticeModule')
+const DeptModel = require('../models/Department')
+const MajorModel = require('../models/Major')
 
 // 登录
 exports.login = (req, res) => {
@@ -248,10 +250,10 @@ exports.addUsers = (req, res) => {
 exports.updateOneUser = (req, res) => {
     // console.log(req.body)
     const { _id, username, userId, userPhone, userRole, userInstitute, userSubject } = req.body
-    // console.log('_id', _id)
+    console.log('userId', req.body)
     UserModel.findOne({ userId })
         .then((idCannotChange) => {
-            console.log('开始寻找传入的userID')
+            console.log('开始寻找传入的userID', idCannotChange)
             // console.log('_id', _id)
             // console.log('idCannotChange._id', JSON.stringify(idCannotChange._id).slice(1, -1))
             // if (idCannotChange) {
@@ -276,8 +278,13 @@ exports.updateOneUser = (req, res) => {
                         })
                     })
             }
-        }
-        )
+            // else{
+            //     res.send({
+            //         status: 400,
+            //         msg: `修改失败，该`
+            //     })
+            // }
+        })
         .catch((error) => {
             res.send({
                 status: 500,
@@ -433,5 +440,214 @@ exports.changeIsRead = (req, res) => {
             //     msg: `服务端错误：${error}`,
             //     data: null
             // })
+        })
+}
+
+// 向用户中添加选择的志愿老师
+exports.selectTeachers = (req, res) => {
+    const [userId, valueThu] = req.body
+    console.log('===添加志愿老师的请求', userId, valueThu)
+    UserModel.updateOne({ userId }, { $set: { valueThu } })
+        .then((doc) => {
+            console.log('添加进去了吗', doc)
+            res.send({
+                status: 200,
+                msg: `选择志愿成功！`
+            })
+        })
+        .catch((error) => {
+            res.send({
+                status: 400,
+                msg: `提交异常，请重新尝试${error}`
+            })
+        })
+}
+
+// 查询学生是否已经选择了三名志愿老师
+exports.isHaveStuVal = (req, res) => {
+    const userId = req.query['0']
+    console.log('userId', userId)
+    UserModel.findOne({ userId })
+        .then((doc) => {
+            console.log('doc', doc)
+            if (doc.valueThu) {
+                res.send({
+                    status: 200,
+                    msg: `请求成功！`,
+                    data: doc.valueThu
+                })
+            } else {
+                res.send({
+                    status: 400,
+                    msg: `该用户暂未选择志愿导师`,
+                })
+            }
+        })
+        .catch((error) => {
+            res.send({
+                status: 500,
+                msg: `服务端错误：${error}`,
+            })
+        })
+}
+
+
+// 查询所有老师的信息
+exports.getAllTeachers = (req, res) => {
+    UserModel.find({ userRole: '老师' }).sort({ userId: 1 })
+        .then((users) => {
+            res.send({
+                status: 200,
+                msg: '获取数据成功！',
+                data: users
+            })
+        })
+        .catch((error) => {
+            res.send({
+                status: 401,
+                msg: `获取数据异常，请重新尝试${error}`
+            })
+        })
+}
+
+// 查询当前学生选中的教师信息
+exports.getSelectTeachers = (req, res) => {
+
+}
+
+// 查询所有的志愿里有当前导师用户的学生
+exports.getAllStudents = (req, res) => {
+    const userSubject = req.query['0']
+    console.log('++++', userSubject)
+    // UserModel.find({ userSubject }).sort({ userId: 1 })
+    UserModel.find({ userSubject, userRole: '学生' }).sort({ userId: 1 })
+        .then((users) => {
+            res.send({
+                status: 200,
+                msg: '获取数据成功！',
+                data: users
+            })
+        })
+        .catch((error) => {
+            res.send({
+                status: 401,
+                msg: `获取数据异常，请重新尝试${error}`
+            })
+        })
+}
+
+// 获取所有二级学院
+exports.getAllDept = (req, res) => {
+    DeptModel.find({}).sort({ deptId: 1 })
+        .then((roles) => {
+            // console.log(roles)
+            res.send({
+                status: 200,
+                msg: '获取数据成功！',
+                data: roles
+            })
+        })
+        .catch((error) => {
+            res.send({
+                status: 401,
+                msg: `获取数据异常，请重新尝试${error}`
+            })
+        })
+}
+
+// 新增二级学院
+exports.addDept = (req, res) => {
+    console.log('~~~', req.body)
+    const { deptName, deptId } = req.body
+    DeptModel.findOne({ $or: [{ deptName }, { deptId }] })
+        .then((user) => {
+            if (!user) {
+                DeptModel.create(req.body)
+                    .then(() => {
+                        res.send({
+                            status: 200,
+                            msg: '二级学院添加成功！'
+                        })
+                    })
+                    .catch(() => {
+                        res.send({
+                            status: 401,
+                            msg: '添加异常，请重新尝试'
+                        })
+                    })
+            } else {
+                res.send({
+                    status: 400,
+                    msg: '该学院或学院编号已存在，不能重复添加'
+                })
+            }
+        })
+        .catch((error) => {
+            res.send({
+                status: 401,
+                msg: `添加异常，请重新尝试${error}`
+            })
+        })
+}
+
+// 更新二级学院
+exports.UpdateDept = (req, res) => {
+    const { deptName, deptId } = req.body
+    console.log('~~~', deptName, deptId)
+
+    DeptModel.updateOne({ deptId }, { $set: { deptName } })
+        .then(() => {
+            res.send({
+                status: 200,
+                msg: '二级学院名称更改成功'
+            })
+        })
+        .catch((error) => {
+            res.send({
+                status: 400,
+                msg: `更改失败，请重新尝试${error}`
+            })
+        })
+}
+
+// 获取二级学院的专业
+exports.getAllMajor = (req, res) => {
+    const deptId = req.query['0']
+    // console.log()
+    MajorModel.find({ deptId }).sort({ majorId: 1 })
+        .then((roles) => {
+            // console.log(roles)
+            res.send({
+                status: 200,
+                msg: '获取数据成功！',
+                data: roles
+            })
+        })
+        .catch((error) => {
+            res.send({
+                status: 401,
+                msg: `获取数据异常，请重新尝试${error}`
+            })
+        })
+}
+
+
+// 新增专业
+exports.addMajor = (req, res) => {
+    // const { deptName, deptId } = req.body
+    console.log('~~~', req.body)
+
+    MajorModel.create(req.body)
+        .then(() => {
+            res.send({
+                status: 200,
+                msg: '二级学院专业新增成功'
+            })
+        })
+        .catch((error) => {
+            res.send({
+                status: 400,
+                msg: `新增专业失败，请重新尝试${error}`
+            })
         })
 }

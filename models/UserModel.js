@@ -14,7 +14,8 @@ var userSchema = new Schema({
     userPhone: Number,
     userInstitute: String,
     userSubject: String,
-    userRole: String
+    userRole: String,
+    valueThu: Object
 })
 
 // 定义Model(与集合对应, 可以操作集合)
